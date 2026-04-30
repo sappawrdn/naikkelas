@@ -1,26 +1,48 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer base {
+  html, body {
+    background: theme("colors.paper");
+    color: theme("colors.charcoal");
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  body {
+    font-family: theme("fontFamily.sans");
+    font-feature-settings: "tnum", "ss01";
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  .font-mono, code, kbd, samp, pre {
+    font-feature-settings: "tnum", "zero";
+  }
+
+  em, i, .italic {
+    font-style: italic;
+    font-synthesis: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .nk-rule        { @apply border-0 border-t border-rule; }
+  .nk-rule-strong { @apply border-0 border-t border-rule-2; }
+
+  .nk-sec-bar { @apply flex items-center gap-3 my-6; }
+  .nk-sec-bar > .line { @apply flex-1 h-px bg-rule; }
+  .nk-sec-bar > .num  { @apply font-mono text-meta-mono text-sepia tracking-[0.05em]; }
+
+  .nk-btn {
+    @apply inline-flex items-center justify-center gap-2
+           font-sans text-[15px] font-medium
+           rounded-btn border border-rule-2 bg-paper text-charcoal
+           px-[18px] py-[14px] transition-colors;
+  }
+  .nk-btn:hover { @apply bg-paper-3; }
+  .nk-btn-primary {
+    @apply bg-teal text-paper border-teal-deep;
+  }
+  .nk-btn-primary:hover { @apply bg-teal-deep; }
+  .nk-btn-block { @apply w-full px-[18px] py-4 text-[15px]; }
 }
