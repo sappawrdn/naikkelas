@@ -46,3 +46,134 @@
   .nk-btn-primary:hover { @apply bg-teal-deep; }
   .nk-btn-block { @apply w-full px-[18px] py-4 text-[15px]; }
 }
+
+/* ── A4 page styles (laporan route) ─────────────────────────────────── */
+@layer components {
+  .a4 {
+    width: 794px;
+    height: 1123px;
+    background: #F7F2E8;
+    border: 1px solid theme("colors.rule-2");
+    position: relative;
+    overflow: hidden;
+    font-family: theme("fontFamily.sans");
+    color: theme("colors.charcoal");
+    margin: 24px auto;
+  }
+
+  .a4 .spine {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 96px;
+    border-right: 1px solid theme("colors.rule");
+    padding: 56px 0 48px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .a4 .body-col {
+    position: absolute;
+    left: 132px;
+    right: 60px;
+    top: 80px;
+    bottom: 64px;
+    overflow: hidden;
+  }
+
+  .a4 .secnum {
+    font-family: theme("fontFamily.mono");
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: theme("colors.sepia");
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    align-self: flex-start;
+  }
+
+  .a4 .seclabel {
+    font-family: theme("fontFamily.sans");
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: theme("colors.sepia");
+  }
+
+  .a4 .pagemark {
+    font-family: theme("fontFamily.mono");
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: theme("colors.sepia");
+  }
+}
+
+/* ── Print mode (Cmd+P) ────────────────────────────────────────────── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .report-root,
+  .report-root * {
+    visibility: visible;
+  }
+
+  .report-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .a4 {
+    width: 210mm;
+    height: 297mm;
+    border: none;
+    margin: 0;
+    page-break-before: always;
+    page-break-after: always;
+    page-break-inside: avoid;
+    background: #F7F2E8;
+  }
+
+  .a4:first-of-type {
+    page-break-before: avoid;
+  }
+
+  .a4:last-of-type {
+    page-break-after: avoid;
+  }
+
+  .a4 .spine {
+    width: 25mm;
+    padding: 16mm 0 14mm 7mm;
+  }
+
+  .a4 .body-col {
+    left: 35mm;
+    right: 16mm;
+    top: 22mm;
+    bottom: 18mm;
+  }
+
+  .a4 .bukti-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .nk-stamp,
+  .a4 {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+}
