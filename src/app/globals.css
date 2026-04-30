@@ -134,9 +134,10 @@
   .a4 {
     width: 210mm;
     height: 297mm;
+    max-height: 297mm;
+    overflow: hidden;
     border: none;
     margin: 0;
-    page-break-before: always;
     page-break-after: always;
     page-break-inside: avoid;
     background: #F7F2E8;
@@ -152,14 +153,22 @@
 
   .a4 .spine {
     width: 25mm;
+    height: 297mm;
+    max-height: 297mm;
     padding: 16mm 0 14mm 7mm;
+    overflow: hidden;
   }
 
   .a4 .body-col {
     left: 35mm;
     right: 16mm;
-    top: 22mm;
-    bottom: 18mm;
+    top: 18mm;
+    bottom: 14mm;
+  }
+
+  .a4 .text-h1-cover {
+    font-size: 64px !important;
+    line-height: 1.04 !important;
   }
 
   .a4 .bukti-card {

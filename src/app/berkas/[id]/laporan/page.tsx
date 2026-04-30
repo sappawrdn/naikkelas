@@ -598,7 +598,7 @@ export default function LaporanPage({
                 <p className="font-sans text-label-up-wide text-sepia uppercase">
                   Bukti Pendukung
                   <span className="font-mono text-meta-mono ml-2 normal-case tracking-[0.04em]">
-                    · {pageIdx + 1}/2
+                    · {pageIdx + 1}/{buktiPages.length}
                   </span>
                 </p>
                 <div className="w-10 h-px bg-rule-2 mt-3" />
