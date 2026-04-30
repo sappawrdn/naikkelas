@@ -8,17 +8,7 @@ import {
   UploadCard,
   FloatingPill,
 } from "@/components/nk";
-import type { UploadStatus } from "@/components/nk/types";
-
-// Shape of an uploaded artifact in state.
-type Artifact = {
-  id: string;
-  name: string;
-  meta: string;
-  thumb: string;
-  status: UploadStatus;
-  progress?: number;
-};
+import { saveArtifacts, type Artifact } from "@/lib/storage";
 
 // Format file size: 1234567 → "1.2 MB"
 function formatSize(bytes: number): string {
@@ -27,7 +17,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// Generate short label for thumbnail placeholder (no real image yet)
+// Generate short label for thumbnail placeholder
 function thumbLabel(filename: string): string {
   const noExt = filename.replace(/\.[^.]+$/, "");
   return noExt.length > 12 ? noExt.slice(0, 12) : noExt;
@@ -44,7 +34,6 @@ export default function UploadPage({
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Add new files to artifacts state
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const next: Artifact[] = Array.from(files).map((f) => ({
@@ -78,6 +67,8 @@ export default function UploadPage({
   };
 
   const handleAnalyze = () => {
+    // Persist artifacts to sessionStorage before navigating to processing
+    saveArtifacts(id, artifacts);
     router.push(`/berkas/${id}/membaca`);
   };
 
@@ -95,7 +86,6 @@ export default function UploadPage({
 
         <SectionOrnament num="01" label="Tambahkan Bukti" />
 
-        {/* Hidden file input — programmatically clicked by drop zone */}
         <input
           ref={fileInputRef}
           type="file"
@@ -105,7 +95,6 @@ export default function UploadPage({
           onChange={(e) => handleFiles(e.target.files)}
         />
 
-        {/* Drop zone — click to open file picker, or drag files in */}
         <div
           onClick={handleClickDropZone}
           onDragOver={handleDragOver}
