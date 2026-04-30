@@ -8,6 +8,7 @@ import {
   UploadCard,
   HatchProgress,
   ProcessingChecklist,
+  Scanline,
 } from "@/components/nk";
 import { loadArtifacts, saveArtifacts, type Artifact } from "@/lib/storage";
 import type { StampKind, Provenance } from "@/components/nk/types";
@@ -26,8 +27,8 @@ function shouldFlag(idx: number): boolean {
 
 const READ_DURATION = 3000;
 const PAUSE_BEFORE_NEXT = 400;
+const SCANLINE_TICK = 100; // update every 100ms
 
-// Build checklist items based on done count
 function buildChecklist(doneCount: number, totalCount: number) {
   const items = [
     { label: "Pola pendapatan harian", threshold: 1 },
@@ -51,7 +52,11 @@ export default function MembacaPage({
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [scanProgress, setScanProgress] = useState(0); // 0-100, for active card
+
+  const advanceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const finishTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const loaded = loadArtifacts(id);
@@ -67,13 +72,30 @@ export default function MembacaPage({
   useEffect(() => {
     if (!isLoaded || activeIdx < 0 || activeIdx >= artifacts.length) return;
 
+    // Step 1: Mark card as "Membaca…" + reset scan progress
     setArtifacts((prev) =>
       prev.map((a, i) =>
         i === activeIdx ? { ...a, status: "Membaca…" } : a
       )
     );
+    setScanProgress(0);
 
-    timerRef.current = setTimeout(() => {
+    // Step 2: Tick scanline progress 0 → 100 over READ_DURATION
+    const ticksTotal = READ_DURATION / SCANLINE_TICK;
+    let tickCount = 0;
+    scanIntervalRef.current = setInterval(() => {
+      tickCount += 1;
+      setScanProgress(Math.min(100, Math.round((tickCount / ticksTotal) * 100)));
+    }, SCANLINE_TICK);
+
+    // Step 3: After READ_DURATION, mark done/warn + stamp
+    finishTimerRef.current = setTimeout(() => {
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
+      }
+      setScanProgress(0);
+
       const flag = shouldFlag(activeIdx);
       setArtifacts((prev) =>
         prev.map((a, i) => {
@@ -94,16 +116,17 @@ export default function MembacaPage({
         })
       );
 
-      timerRef.current = setTimeout(() => {
+      // Step 4: After short pause, advance to next card
+      advanceTimerRef.current = setTimeout(() => {
         setActiveIdx((prev) => prev + 1);
       }, PAUSE_BEFORE_NEXT);
     }, READ_DURATION);
 
+    // Cleanup all timers if dependencies change or unmount
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
+      if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+      if (finishTimerRef.current) clearTimeout(finishTimerRef.current);
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
     };
   }, [activeIdx, isLoaded, artifacts.length]);
 
@@ -151,26 +174,34 @@ export default function MembacaPage({
         <SectionOrnament num="02" label="Bukti Sedang Diproses" />
 
         <div className="space-y-3">
-          {artifacts.map((a) => (
-            <UploadCard
-              key={a.id}
-              thumb={a.thumb}
-              name={a.name}
-              meta={a.meta}
-              status={a.status}
-              stamp={a.stampKind as StampKind | undefined}
-              provenance={
-                a.status === "Selesai dibaca" || a.status === "Sebagian terbaca"
-                  ? pickStamp(a.name).provenance
-                  : undefined
-              }
-              note={
-                a.stampKind === "PERLU DIPERIKSA"
-                  ? "Tidak masalah — kami tetap bisa pakai bagian yang terbaca."
-                  : undefined
-              }
-            />
-          ))}
+          {artifacts.map((a, i) => {
+            const isActive = i === activeIdx && a.status === "Membaca…";
+            const isDone = a.status === "Selesai dibaca" || a.status === "Sebagian terbaca";
+            const provenance = isActive || isDone ? pickStamp(a.name).provenance : undefined;
+
+            return (
+              <div key={a.id}>
+                <UploadCard
+                  thumb={a.thumb}
+                  name={a.name}
+                  meta={a.meta}
+                  status={a.status}
+                  stamp={a.stampKind as StampKind | undefined}
+                  provenance={provenance}
+                  note={
+                    a.stampKind === "PERLU DIPERIKSA"
+                      ? "Tidak masalah — kami tetap bisa pakai bagian yang terbaca."
+                      : undefined
+                  }
+                />
+                {isActive && (
+                  <div className="mt-2 ml-[88px]">
+                    <Scanline pct={scanProgress} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <SectionOrnament num="03" label="Yang Sedang Kami Cari" />
